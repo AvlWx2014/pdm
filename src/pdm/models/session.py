@@ -54,7 +54,7 @@ def _get_transport(
     return httpx2.HTTPTransport(verify=verify, cert=cert, trust_env=True, proxy=proxy, retries=MAX_RETRIES)
 
 
-class ThreadedSyncSqliteStorage(hishel.SyncSqliteStorage):
+class ThreadedSqliteStorage(hishel.SqliteStorage):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         self._local_conns: dict[int, sqlite3.Connection] = {}
         self._lock = threading.Lock()
@@ -122,10 +122,10 @@ class PDMPyPIClient(PyPIClient):
                             shutil.rmtree(f, ignore_errors=True)
                         else:
                             f.unlink()
-            storage = ThreadedSyncSqliteStorage(database_path=cache_db, default_ttl=CACHES_TTL)
+            storage = ThreadedSqliteStorage(database_path=cache_db, default_ttl=CACHES_TTL)
 
             def cache_transport(transport: httpx2.BaseTransport) -> httpx2.BaseTransport:
-                return hishel.httpx2.SyncCacheTransport(next_transport=transport, storage=storage)
+                return hishel.httpx2.CacheTransport(next_transport=transport, storage=storage)
 
         mounts: dict[str, httpx2.BaseTransport] = {"file://": LocalFSTransport()}
         self._trusted_host_ports: set[tuple[str, int | None]] = set()
